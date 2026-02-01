@@ -1,5 +1,3 @@
-# Project Nexus (Design Proposal)
-
 Role: Principal Software Architect and DX Lead
 
 This document reframes the dev environment as a local control plane with a
