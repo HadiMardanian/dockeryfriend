@@ -1,0 +1,80 @@
+version: 1
+project: nexus-demo
+
+intents:
+  onboarding:
+    scope:
+      packages: ["apps/*", "services/*"]
+    desired:
+      services:
+        merchant-api:
+          states: [deps.synchronized, schema.aligned, env.exported, service.running]
+        frontend:
+          states: [deps.synchronized, env.inherited, service.running]
+
+  feature:
+    scope:
+      packages: ["apps/frontend", "services/merchant-api"]
+    desired:
+      services:
+        merchant-api:
+          states: [deps.synchronized, schema.aligned, env.exported, service.running]
+        frontend:
+          states: [deps.synchronized, env.inherited, service.running]
+
+services:
+  merchant-api:
+    root: services/merchant-api
+    type: node.service
+    provides:
+      env:
+        MERCHANT_API_URL:
+          valueFrom: service.endpoint
+    states:
+      deps.synchronized:
+        type: package.deps
+        manager: pnpm
+        lockfile: pnpm-lock.yaml
+      schema.aligned:
+        type: db.schema
+        provider: postgres
+        source: prisma/schema.prisma
+        target: database:merchant
+      env.exported:
+        type: env.export
+        keys: [MERCHANT_API_URL]
+      service.running:
+        type: process.http
+        port: 4001
+        health: /health
+
+  frontend:
+    root: apps/frontend
+    type: node.web
+    requires:
+      services: [merchant-api]
+      states:
+        merchant-api: [schema.aligned, env.exported]
+    consumes:
+      env:
+        MERCHANT_API_URL:
+          from: merchant-api.MERCHANT_API_URL
+    states:
+      deps.synchronized:
+        type: package.deps
+        manager: pnpm
+        lockfile: pnpm-lock.yaml
+      env.inherited:
+        type: env.inherit
+        from: merchant-api
+      service.running:
+        type: process.http
+        port: 3000
+        health: /
+
+context:
+  static:
+    configHash: true
+  dynamic:
+    shell: inherit
+    envAllowlist: [NODE_ENV, AWS_PROFILE]

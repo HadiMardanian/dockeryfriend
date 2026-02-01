@@ -1,0 +1,18 @@
+{
+  "name": "project-nexus",
+  "version": "0.1.0",
+  "description": "Local control plane for dev environment state",
+  "private": true,
+  "bin": {
+    "nexus": "bin/nexus.js"
+  },
+  "scripts": {
+    "nexus": "node bin/nexus.js",
+    "status": "node bin/nexus.js status",
+    "graph": "node bin/nexus.js graph",
+    "dev": "node bin/nexus.js dev --intent feature"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1"
+  }
+}
